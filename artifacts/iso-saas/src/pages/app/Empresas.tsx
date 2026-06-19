@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { useLocation } from "wouter";
 import { 
   useGetCompany, 
   useUpdateCompany, 
-  getGetCompanyQueryKey 
+  getGetCompanyQueryKey,
+  getListDiagnosticsQueryKey
 } from "@workspace/api-client-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,6 +36,7 @@ type CompanyForm = z.infer<typeof companySchema>;
 
 export default function Empresas() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [initialized, setInitialized] = useState(false);
 
@@ -81,8 +84,10 @@ export default function Empresas() {
       { id: user.companyId, data },
       {
         onSuccess: () => {
-          toast.success("Dados da empresa atualizados com sucesso!");
+          toast.success("Dados da empresa atualizados! Regenerando diagnóstico...");
           queryClient.invalidateQueries({ queryKey: getGetCompanyQueryKey(user.companyId!) });
+          queryClient.invalidateQueries({ queryKey: getListDiagnosticsQueryKey({ companyId: user.companyId! }) });
+          setLocation("/app/diagnostico");
         },
         onError: () => toast.error("Erro ao atualizar dados.")
       }
