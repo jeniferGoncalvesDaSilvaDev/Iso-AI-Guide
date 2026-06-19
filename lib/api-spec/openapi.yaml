@@ -631,6 +631,31 @@ paths:
                 items:
                   $ref: "#/components/schemas/DocumentStat"
 
+  /recommendations:
+    get:
+      operationId: getRecommendations
+      tags: [dashboard]
+      summary: Recomendações IA personalizadas por empresa
+      parameters:
+        - name: companyId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Recomendações geradas pela IA
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendationsResult"
+        "400":
+          description: companyId obrigatório
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   # --- AUDIT ---
   /audit-logs:
     get:
@@ -1096,6 +1121,39 @@ components:
           type: integer
         draft:
           type: integer
+
+    # RECOMMENDATIONS SCHEMAS
+    Recommendation:
+      type: object
+      required: [standardCode, standardName, priority, reason, actions]
+      properties:
+        standardCode:
+          type: string
+        standardName:
+          type: string
+        priority:
+          type: string
+          enum: [alta, media, baixa]
+        reason:
+          type: string
+        actions:
+          type: array
+          items:
+            type: string
+
+    RecommendationsResult:
+      type: object
+      required: [summary, recommendations, generatedAt]
+      properties:
+        summary:
+          type: string
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Recommendation"
+        generatedAt:
+          type: string
+          format: date-time
 
     # AUDIT SCHEMAS
     AuditLog:

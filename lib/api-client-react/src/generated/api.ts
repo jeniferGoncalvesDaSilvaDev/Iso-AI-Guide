@@ -43,12 +43,14 @@ import type {
   GetDashboardSummaryParams,
   GetDocumentStatsParams,
   GetRecentActivityParams,
+  GetRecommendationsParams,
   HealthStatus,
   JobStatus,
   ListAuditLogsParams,
   ListDiagnosticsParams,
   ListDocumentsParams,
   LoginInput,
+  RecommendationsResult,
   RefreshInput,
   RegisterInput,
   Standard,
@@ -2249,6 +2251,90 @@ export function useGetDocumentStats<TData = Awaited<ReturnType<typeof getDocumen
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetDocumentStatsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetRecommendationsUrl = (params: GetRecommendationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/recommendations?${stringifiedParams}` : `/api/recommendations`
+}
+
+/**
+ * @summary Recomendações IA personalizadas por empresa
+ */
+export const getRecommendations = async (params: GetRecommendationsParams, options?: RequestInit): Promise<RecommendationsResult> => {
+
+  return customFetch<RecommendationsResult>(getGetRecommendationsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRecommendationsQueryKey = (params?: GetRecommendationsParams,) => {
+    return [
+    `/api/recommendations`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetRecommendationsQueryOptions = <TData = Awaited<ReturnType<typeof getRecommendations>>, TError = ErrorType<ErrorResponse>>(params: GetRecommendationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecommendations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRecommendationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecommendations>>> = ({ signal }) => getRecommendations(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRecommendations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRecommendationsQueryResult = NonNullable<Awaited<ReturnType<typeof getRecommendations>>>
+export type GetRecommendationsQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Recomendações IA personalizadas por empresa
+ */
+
+export function useGetRecommendations<TData = Awaited<ReturnType<typeof getRecommendations>>, TError = ErrorType<ErrorResponse>>(
+ params: GetRecommendationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecommendations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRecommendationsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

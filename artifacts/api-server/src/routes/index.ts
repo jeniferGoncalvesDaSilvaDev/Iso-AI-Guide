@@ -8,6 +8,7 @@ import documentsRouter from "./documents";
 import chatRouter from "./chat";
 import dashboardRouter from "./dashboard";
 import auditRouter from "./audit";
+import recommendationsRouter from "./recommendations";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(documentsRouter);
 router.use(chatRouter);
 router.use(dashboardRouter);
 router.use(auditRouter);
+router.use(recommendationsRouter);
 
 export default router;

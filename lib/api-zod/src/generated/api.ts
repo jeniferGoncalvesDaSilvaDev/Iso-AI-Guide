@@ -518,6 +518,26 @@ export const GetDocumentStatsResponse = zod.array(GetDocumentStatsResponseItem)
 
 
 /**
+ * @summary Recomendações IA personalizadas por empresa
+ */
+export const GetRecommendationsQueryParams = zod.object({
+  "companyId": zod.coerce.string()
+})
+
+export const GetRecommendationsResponse = zod.object({
+  "summary": zod.string(),
+  "recommendations": zod.array(zod.object({
+  "standardCode": zod.string(),
+  "standardName": zod.string(),
+  "priority": zod.enum(['alta', 'media', 'baixa']),
+  "reason": zod.string(),
+  "actions": zod.array(zod.string())
+})),
+  "generatedAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Listar logs de auditoria
  */
 export const ListAuditLogsQueryParams = zod.object({

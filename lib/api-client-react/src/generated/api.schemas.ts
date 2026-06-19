@@ -351,6 +351,29 @@ export interface DocumentStat {
   draft?: number;
 }
 
+export type RecommendationPriority = typeof RecommendationPriority[keyof typeof RecommendationPriority];
+
+
+export const RecommendationPriority = {
+  alta: 'alta',
+  media: 'media',
+  baixa: 'baixa',
+} as const;
+
+export interface Recommendation {
+  standardCode: string;
+  standardName: string;
+  priority: RecommendationPriority;
+  reason: string;
+  actions: string[];
+}
+
+export interface RecommendationsResult {
+  summary: string;
+  recommendations: Recommendation[];
+  generatedAt: string;
+}
+
 export interface AuditLog {
   id: string;
   /** @nullable */
@@ -395,6 +418,10 @@ limit?: number;
 
 export type GetDocumentStatsParams = {
 companyId?: string;
+};
+
+export type GetRecommendationsParams = {
+companyId: string;
 };
 
 export type ListAuditLogsParams = {
