@@ -98,6 +98,9 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 
   await logAudit(req, "user.register", "user", user.id);
 
+  // Send welcome email (non-blocking)
+  import("../lib/email").then(m => m.sendWelcomeEmail(user.email, user.name)).catch(() => {});
+
   res.status(201).json({
     user: {
       id: user.id,
@@ -241,6 +244,83 @@ router.get("/auth/me", authenticateToken, async (req, res): Promise<void> => {
     companyId: user.companyId,
     createdAt: user.createdAt,
   });
+});
+
+// ─── Password Reset ─────────────────────────────────────────────────────────
+
+router.post("/auth/forgot-password", async (req, res): Promise<void> => {
+  const { email } = req.body as { email?: string };
+  if (!email) {
+    res.status(400).json({ error: "Email é obrigatório" });
+    return;
+  }
+
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.email, email))
+    .limit(1);
+
+  // Always return success to avoid leaking user info
+  if (!user) {
+    res.json({ message: "Se o email existir, você receberá um link para redefinir sua senha." });
+    return;
+  }
+
+  // Generate reset token (valid for 1 hour)
+  const crypto = await import("node:crypto");
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const resetExpires = new Date(Date.now() + 3600000); // 1 hour
+
+  await db
+    .update(usersTable)
+    .set({ resetToken, resetExpires })
+    .where(eq(usersTable.id, user.id));
+
+  // Send reset email
+  import("../lib/email").then(m => m.sendResetPasswordEmail(user.email, user.name, resetToken)).catch(() => {});
+
+  res.json({ message: "Se o email existir, você receberá um link para redefinir sua senha." });
+});
+
+router.post("/auth/reset-password", async (req, res): Promise<void> => {
+  const { token, password } = req.body as { token?: string; password?: string };
+  if (!token || !password) {
+    res.status(400).json({ error: "Token e nova senha são obrigatórios" });
+    return;
+  }
+
+  if (password.length < 8) {
+    res.status(400).json({ error: "A senha deve ter pelo menos 8 caracteres" });
+    return;
+  }
+
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.resetToken, token))
+    .limit(1);
+
+  if (!user || !user.resetExpires) {
+    res.status(400).json({ error: "Token inválido ou expirado" });
+    return;
+  }
+
+  if (new Date() > new Date(user.resetExpires)) {
+    res.status(400).json({ error: "Token expirado. Solicite um novo." });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+
+  await db
+    .update(usersTable)
+    .set({ passwordHash, resetToken: null, resetExpires: null })
+    .where(eq(usersTable.id, user.id));
+
+  await logAudit(req, "user.reset-password", "user", user.id);
+
+  res.json({ message: "Senha redefinida com sucesso!" });
 });
 
 export default router;
