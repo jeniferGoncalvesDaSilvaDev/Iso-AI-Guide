@@ -10,8 +10,7 @@ import {
   Settings, 
   LogOut,
   Menu,
-  ShieldCheck,
-  BookOpen
+  ShieldCheck
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -60,11 +59,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 flex-col fixed inset-y-0 border-r border-border bg-card">
-        <div className="p-6 flex items-center gap-3">
-          <div className="bg-primary text-primary-foreground p-2 rounded-lg">
-            <BookOpen className="h-6 w-6" />
-          </div>
-          <span className="font-bold text-xl tracking-tight text-foreground">ISO Gestão IA</span>
+        <div className="p-6 flex items-center">
+          <img src="/logo.png" alt="Certifyr" className="h-9" />
         </div>
 
         <div className="flex-1 px-4 py-2 overflow-y-auto">
@@ -91,9 +87,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b border-border bg-card flex items-center justify-between px-4 z-50">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-primary" />
-          <span className="font-bold text-lg text-foreground">ISO Gestão IA</span>
+        <div className="flex items-center">
+          <img src="/logo.png" alt="Certifyr" className="h-7" />
         </div>
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
@@ -102,8 +97,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0 flex flex-col">
-            <div className="p-6 border-b border-border">
-              <span className="font-bold text-xl text-foreground">Menu</span>
+            <div className="p-6 border-b border-border flex items-center">
+              <img src="/logo.png" alt="Certifyr" className="h-8" />
             </div>
             <div className="flex-1 px-4 py-4 overflow-y-auto">
               <NavLinks onClick={() => setMobileMenuOpen(false)} />

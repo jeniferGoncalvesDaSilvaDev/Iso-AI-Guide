@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const loginSchema = z.object({
@@ -50,9 +50,7 @@ export default function Login() {
       <div className="flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md space-y-8">
           <div className="flex flex-col items-center text-center space-y-2">
-            <div className="bg-primary/10 p-3 rounded-2xl mb-2">
-              <BookOpen className="h-10 w-10 text-primary" />
-            </div>
+            <img src="/logo.png" alt="Certifyr" className="h-14 mb-2" />
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Bem-vindo de volta</h1>
             <p className="text-muted-foreground">
               Acesse sua conta para continuar sua jornada de certificação.

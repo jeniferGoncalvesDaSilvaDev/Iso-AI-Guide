@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { BookOpen, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const registerSchema = z.object({
@@ -58,9 +58,7 @@ export default function Register() {
       <div className="w-full max-w-md mx-auto space-y-8 relative z-10">
         <div className="flex flex-col items-center text-center space-y-2">
           <Link href="/">
-            <div className="bg-primary/10 p-3 rounded-2xl mb-2 cursor-pointer hover:bg-primary/20 transition-colors">
-              <BookOpen className="h-10 w-10 text-primary" />
-            </div>
+            <img src="/logo.png" alt="Certifyr" className="h-14 mb-2 cursor-pointer" />
           </Link>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Comece sua jornada</h1>
           <p className="text-muted-foreground">
