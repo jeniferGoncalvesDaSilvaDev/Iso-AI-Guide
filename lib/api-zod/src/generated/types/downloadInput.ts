@@ -5,7 +5,8 @@
  * ISO SaaS - Plataforma de Gestão ISO com IA
  * OpenAPI spec version: 0.1.0
  */
+import type { DownloadInputFormat } from './downloadInputFormat';
 
-export interface HealthStatus {
-  status: string;
+export interface DownloadInput {
+  format: DownloadInputFormat;
 }
