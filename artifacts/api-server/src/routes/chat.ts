@@ -58,14 +58,34 @@ router.post("/chat/messages", async (req, res): Promise<void> => {
     .orderBy(desc(chatMessagesTable.createdAt))
     .limit(10);
 
-  const systemPrompt = `Você é o assistente IA especializado em normas ISO da plataforma ISO Gestão IA. Você ajuda empresas a implementar sistemas de gestão de qualidade de forma prática e acessível.
+  // Buscar contexto relevante via RAG
+  let ragContext = "";
+  try {
+    const { searchRelevantContext } = await import("../generators/rag");
+    ragContext = await searchRelevantContext(companyId, content, 5);
+  } catch (e) {
+    // RAG fallback - continue without
+  }
 
-${company ? `Empresa: ${company.name} | Setor: ${company.sector} | Porte: ${company.size}` : ""}
-${recentDiag[0] ? `Diagnóstico: ${recentDiag[0].qualityObjectives ?? "Em andamento"}` : ""}
-${recentDocs.length > 0 ? `Documentos: ${recentDocs.map((d) => `${d.title} (${d.status})`).join(", ")}` : ""}
+  const systemPrompt = `Você é o CONSULTOR ISO ESPECIALISTA da plataforma ISO Gestão IA. Você atua como um consultor sênior com 20+ anos de experiência em implementação e auditoria de sistemas de gestão da qualidade.
 
-Responda sempre em português do Brasil. Use linguagem simples e acessível. Seja prático e objetivo.
-Quando o usuário tiver dúvidas sobre ISO, explique de forma clara, evitando jargões técnicos.`;
+${company ? `EMPRESA: ${company.name} | Setor: ${company.sector} | Porte: ${company.size}` : ""}
+${recentDiag[0] ? `DIAGNÓSTICO ATUAL: ${recentDiag[0].qualityObjectives ?? "Em andamento"}` : ""}
+${recentDocs.length > 0 ? `DOCUMENTOS GERADOS: ${recentDocs.map((d) => `${d.title} (${d.status})`).join(", ")}` : ""}
+
+${ragContext ? `
+**CONTEXTO RECUPERADO (RAG):**
+${ragContext}
+` : ""}
+
+DIRETRIZES:
+- Responda SEMPRE em português do Brasil
+- Use linguagem técnica, clara e prática - como um consultor ISO de verdade
+- Baseie suas respostas nos documentos, diagnóstico e contexto fornecidos acima
+- Quando o usuário perguntar sobre requisitos ISO, cite os itens específicos da norma
+- Sugira ações práticas e aplicáveis à realidade da empresa
+- Se não souber algo, seja honesto e sugira consultar a documentação disponível na plataforma
+- Profundidade compatível com consultoria profissional (R$ 15k-30k)`;
 
   const messages = [
     { role: "system" as const, content: systemPrompt },

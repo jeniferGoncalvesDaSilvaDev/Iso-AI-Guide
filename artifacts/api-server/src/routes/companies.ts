@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { eq, and } from "drizzle-orm";
-import { db, companiesTable } from "@workspace/db";
+import { eq, and, not, inArray } from "drizzle-orm";
+import { db, companiesTable, diagnosticsTable } from "@workspace/db";
 import {
   CreateCompanyBody,
   UpdateCompanyBody,
@@ -104,6 +104,17 @@ router.patch("/companies/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Empresa não encontrada" });
     return;
   }
+
+  // Mark existing diagnostics as outdated since company data changed
+  await db
+    .update(diagnosticsTable)
+    .set({ status: "outdated" })
+    .where(
+      and(
+        eq(diagnosticsTable.companyId, params.data.id),
+        not(inArray(diagnosticsTable.status, ["generating", "outdated"]))
+      )
+    );
 
   await logAudit(req, "company.update", "company", company.id);
   res.json(company);

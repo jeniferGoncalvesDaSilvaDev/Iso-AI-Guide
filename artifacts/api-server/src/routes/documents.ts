@@ -134,16 +134,114 @@ Diagnóstico organizacional:
       for (const docType of typesToGenerate) {
         const typeLabel = DOCUMENT_TYPES.find((d) => d.type === docType)?.label ?? docType;
 
-        const prompt = `Você é um especialista em normas ISO. Crie um documento completo e profissional do tipo "${typeLabel}" para a norma ${standard.code} - ${standard.name}.
+        const prompt = `Você é um consultor líder ISO 9001:2015 com vasta experiência em implementação e auditoria de certificação em empresas de manufatura, metalurgia e indústria em geral.
 
-Empresa: ${company.name}
-Setor: ${company.sector}
-Porte: ${company.size}
-${diagnosticContext}
+**FASE 1: DIAGNÓSTICO E PLANEJAMENTO (OBRIGATÓRIO)**
 
-Crie o documento em português, seguindo todos os requisitos da norma ${standard.code}. O documento deve ser completo, com seções, subseções, exemplos práticos e aplicável à empresa descrita.
+Antes de gerar qualquer documento, você DEVE realizar o seguinte diagnóstico da empresa:
 
-Inclua cabeçalho, escopo, definições, responsabilidades e o conteúdo principal.`;
+1. **Contexto Organizacional**
+   - Identificar as partes interessadas relevantes (clientes, fornecedores, órgãos reguladores, colaboradores)
+   - Mapear as necessidades e expectativas de cada parte interessada
+   - Identificar fatores internos e externos que impactam a qualidade
+
+2. **Mapa de Processos**
+   - Descrever detalhadamente o fluxograma de processos da empresa
+   - Identificar processos principais, de suporte e gerenciais
+   - Definir entradas, saídas, fornecedores e clientes de cada processo
+
+3. **Matriz de Riscos e Oportunidades**
+   - Listar riscos associados a cada processo (com probabilidade e impacto)
+   - Propor ações de mitigação para riscos críticos
+   - Identificar oportunidades de melhoria (redução de custos, aumento de eficiência, etc.)
+
+4. **Objetivos da Qualidade**
+   - Definir KPIs mensuráveis por processo (ex: taxa de defeitos < 2%, OEE > 85%, etc.)
+   - Estabelecer metas quantitativas e prazos para cada objetivo
+   - Alinhar objetivos com a Política da Qualidade
+
+**FASE 2: GERAÇÃO DE DOCUMENTOS**
+
+Com base no diagnóstico acima, gere UM ÚNICO DOCUMENTO COMPLETO PARA CADA ITEM da matriz documental obrigatória.
+
+Tipo do documento: "${typeLabel}"
+Norma: ${standard.code} - ${standard.name}
+
+**ESTRUTURA OBRIGATÓRIA PARA CADA DOCUMENTO:**
+
+**CABEÇALHO INSTITUCIONAL**
+- Empresa: ${company.name}
+- Título do Documento: "${typeLabel}"
+- Código do Documento (conforme matriz)
+- Revisão: 00
+- Data de Emissão: [data atual]
+- Próxima Revisão: [data atual + 1 ano]
+
+**CORPO DO DOCUMENTO (mínimo 1200 palavras)**
+
+1. OBJETIVO
+   Descrever claramente o propósito do documento, alinhado com a ISO 9001:2015
+
+2. ESCOPO
+   Definir a abrangência do documento (processos, áreas, produtos/serviços)
+
+3. RESPONSABILIDADES
+   - Quem elabora, quem revisa, quem aprova
+   - Responsabilidades específicas por cargo/função
+
+4. DEFINIÇÕES E SIGLAS
+   Glossário técnico com todos os termos relevantes
+
+5. DESCRIÇÃO DETALHADA
+   - Como o processo/função é executado
+   - Sequência de atividades (passo a passo)
+   - Critérios de entrada e saída
+
+6. FLUXO DO PROCESSO
+   - Descrição narrativa do fluxograma
+   - Pontos de decisão e alternativas
+   - Interfaces com outros processos
+
+7. INDICADORES DE DESEMPENHO
+   - Métricas específicas para monitoramento
+   - Frequência de medição
+   - Metas quantitativas
+   - Responsável pela coleta
+
+8. REGISTROS ASSOCIADOS
+   - Documentos gerados como evidência
+   - Formulários utilizados
+   - Local de armazenamento e tempo de retenção
+
+9. REFERÊNCIAS NORMATIVAS
+   - Itens específicos da ISO 9001:2015
+   - Legislação aplicável
+   - Documentos correlacionados do SGQ
+
+10. HISTÓRICO DE REVISÕES
+    - Data, descrição da alteração, autor
+
+11. APROVAÇÃO
+    - Nome e cargo do aprovador
+    - Assinatura (descritiva)
+
+**REQUISITOS DE QUALIDADE:**
+
+1. Coerência documental: todos os documentos devem se referenciar e criar um sistema integrado
+2. Utilizar os dados reais da empresa: ${company.name}, Setor: ${company.sector}, Porte: ${company.size}, ${standard.code}
+3. Linguagem técnica e profissional, mas acessível
+4. Conteúdo prático e aplicável, com exemplos concretos
+5. Profundidade compatível com consultoria de R$ 15.000 a R$ 30.000
+6. Mínimo de 1200 palavras por documento
+
+**IMPORTANTE:** 
+- Gere os documentos em português do Brasil
+- Utilize dados fictícios coerentes com o setor (ex: produtos específicos, equipamentos, etc.)
+- Inclua números de processos, códigos de produtos e dados realistas
+- Documentos devem estar prontos para implementação imediata
+
+${diagnosticContext ? `**CONTEXTO DO DIAGNÓSTICO:**
+${diagnosticContext}` : ""}`;
 
         const content = await chat([
           { role: "system", content: "Você é um especialista em normas ISO com 20 anos de experiência na implementação de sistemas de gestão." },
@@ -374,6 +472,98 @@ router.post("/documents/:id/download", async (req, res): Promise<void> => {
     filename,
     expiresAt: expiresAt.toISOString(),
   });
+});
+
+// Serve the actual file content for download
+router.get("/documents/:id/file", async (req, res): Promise<void> => {
+  const docId = req.params.id;
+  const format = req.query.format as string | undefined;
+  const token = req.query.token as string | undefined;
+
+  if (!docId) {
+    res.status(400).json({ error: "ID do documento é obrigatório" });
+    return;
+  }
+
+  // Verify token (simple validation - base64 of document id)
+  const expectedToken = Buffer.from(docId.toString()).toString("base64");
+  if (token !== expectedToken) {
+    res.status(403).json({ error: "Token inválido" });
+    return;
+  }
+
+  const [doc] = await db
+    .select()
+    .from(documentsTable)
+    .where(eq(documentsTable.id, docId.toString()));
+
+  if (!doc) {
+    res.status(404).json({ error: "Documento não encontrado" });
+    return;
+  }
+
+  const fileFormat = format || "pdf";
+  const safeTitle = doc.title.replace(/[^a-zA-Z0-9_\-]/g, "_");
+  const filename = `${safeTitle}_v${doc.version}.${fileFormat}`;
+  const content = doc.content || "";
+
+  // Build HTML content for download (browsers can open and print/save as PDF)
+  const htmlContent = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>${doc.title}</title>
+  <style>
+    @page { margin: 2.5cm; size: A4; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      color: #1a1a1a;
+      padding: 2.5cm;
+    }
+    h1 { font-size: 22pt; margin-bottom: 0.5cm; color: #000; }
+    h2 { font-size: 16pt; margin-top: 0.8cm; margin-bottom: 0.3cm; color: #333; }
+    h3 { font-size: 13pt; margin-top: 0.5cm; margin-bottom: 0.2cm; color: #444; }
+    p { margin-bottom: 0.3cm; text-align: justify; }
+    table { width: 100%; border-collapse: collapse; margin: 0.5cm 0; }
+    th, td { border: 1px solid #999; padding: 8px; text-align: left; }
+    th { background-color: #f0f0f0; font-weight: bold; }
+    .header { text-align: center; margin-bottom: 1cm; padding-bottom: 0.5cm; border-bottom: 2px solid #333; }
+    .header h1 { margin-bottom: 0.2cm; }
+    .meta { font-size: 10pt; color: #666; margin-bottom: 0.5cm; }
+    .footer { margin-top: 1cm; padding-top: 0.3cm; border-top: 1px solid #ccc; font-size: 9pt; color: #999; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>${doc.title}</h1>
+    <div class="meta">
+      <p>Versão: ${doc.version} | Status: ${doc.status} | Código: ${doc.standardCode || ""}</p>
+    </div>
+  </div>
+  <div class="content">
+    ${content.split("\n").map(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return '<p>&nbsp;</p>';
+      if (trimmed.startsWith("# ")) return `<h1>${trimmed.slice(2)}</h1>`;
+      if (trimmed.startsWith("## ")) return `<h2>${trimmed.slice(3)}</h2>`;
+      if (trimmed.startsWith("### ")) return `<h3>${trimmed.slice(4)}</h3>`;
+      if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) return `<li>${trimmed.slice(2)}</li>`;
+      if (trimmed.startsWith("|")) return `<p>${trimmed}</p>`;
+      return `<p>${trimmed}</p>`;
+    }).join("\n")}
+  </div>
+  <div class="footer">
+    <p>Documento gerado pelo Iso AI Guide - Plataforma de Gestão ISO com IA</p>
+  </div>
+</body>
+</html>`;
+
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  res.send(htmlContent);
 });
 
 export default router;

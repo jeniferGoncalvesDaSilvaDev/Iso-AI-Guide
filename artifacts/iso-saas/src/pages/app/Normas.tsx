@@ -15,7 +15,7 @@ import { StepProgress, useWorkflowSteps } from "@/components/ui/StepProgress";
 
 export default function Normas() {
   const { user } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
@@ -43,7 +43,7 @@ export default function Normas() {
     );
   };
 
-  const handleSave = () => {
+  const handleSave = (redirectToDiagnostico = false) => {
     if (!user?.companyId) {
       toast.error("Você precisa configurar sua empresa primeiro");
       return;
@@ -55,6 +55,9 @@ export default function Normas() {
         onSuccess: () => {
           toast.success("Normas salvas! Agora gere seu diagnóstico.");
           queryClient.invalidateQueries({ queryKey: getGetCompanyStandardsQueryKey(user.companyId!) });
+          if (redirectToDiagnostico) {
+            setLocation("/app/diagnostico");
+          }
         },
         onError: () => {
           toast.error("Erro ao salvar as normas. Tente novamente.");
@@ -163,7 +166,7 @@ export default function Normas() {
             {selectStandardsMutation.isPending ? "Salvando..." : "Salvar seleção"}
           </Button>
           <Button
-            onClick={handleSave}
+            onClick={() => handleSave(true)}
             disabled={selectStandardsMutation.isPending || selectedIds.length === 0}
             className="gap-2"
           >

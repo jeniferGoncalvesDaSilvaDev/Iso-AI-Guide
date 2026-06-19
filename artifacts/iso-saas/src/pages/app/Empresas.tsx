@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { 
   useGetCompany, 
   useUpdateCompany, 
+  useCreateDiagnostic,
   getGetCompanyQueryKey,
   getListDiagnosticsQueryKey
 } from "@workspace/api-client-react";
@@ -48,6 +49,7 @@ export default function Empresas() {
   });
 
   const updateMutation = useUpdateCompany();
+  const createDiagnosticMutation = useCreateDiagnostic();
 
   const form = useForm<CompanyForm>({
     resolver: zodResolver(companySchema),
@@ -84,10 +86,23 @@ export default function Empresas() {
       { id: user.companyId, data },
       {
         onSuccess: () => {
-          toast.success("Dados da empresa atualizados! Regenerando diagnóstico...");
+          toast.success("Dados salvos! Iniciando novo diagnóstico...");
           queryClient.invalidateQueries({ queryKey: getGetCompanyQueryKey(user.companyId!) });
-          queryClient.invalidateQueries({ queryKey: getListDiagnosticsQueryKey({ companyId: user.companyId! }) });
-          setLocation("/app/diagnostico");
+          
+          // Trigger automatic diagnosis regeneration with updated company data
+          createDiagnosticMutation.mutate(
+            { data: { companyId: user.companyId! } },
+            {
+              onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: getListDiagnosticsQueryKey({ companyId: user.companyId! }) });
+                setLocation("/app/diagnostico");
+              },
+              onError: () => {
+                toast.error("Diagnóstico anterior marcado como desatualizado. Gere um novo na página de diagnóstico.");
+                setLocation("/app/diagnostico");
+              }
+            }
+          );
         },
         onError: () => toast.error("Erro ao atualizar dados.")
       }

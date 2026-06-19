@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { eq, and, inArray } from "drizzle-orm";
-import { db, standardsTable, companyStandardsTable } from "@workspace/db";
+import { eq, and, not, inArray } from "drizzle-orm";
+import { db, standardsTable, companyStandardsTable, diagnosticsTable } from "@workspace/db";
 import { SelectCompanyStandardsBody } from "@workspace/api-zod";
 import { authenticateToken } from "../middlewares/auth";
+import { logAudit } from "../lib/audit";
 
 const router = Router();
 
@@ -10,6 +11,7 @@ router.use(authenticateToken);
 
 router.get("/standards", async (_req, res): Promise<void> => {
   const standards = await db.select().from(standardsTable);
+
   res.json(
     standards.map((s) => ({
       ...s,
@@ -75,12 +77,24 @@ router.post("/companies/:id/standards", async (req, res): Promise<void> => {
     );
   }
 
+  // Mark existing diagnostics as outdated since standards selection changed
+  await db
+    .update(diagnosticsTable)
+    .set({ status: "outdated" })
+    .where(
+      and(
+        eq(diagnosticsTable.companyId, companyId!),
+        not(inArray(diagnosticsTable.status, ["generating", "outdated"]))
+      )
+    );
+
   const links = await db
     .select()
     .from(companyStandardsTable)
     .where(eq(companyStandardsTable.companyId, companyId!));
 
   if (links.length === 0) {
+    await logAudit(req, "standards.select", "company", companyId);
     res.json([]);
     return;
   }

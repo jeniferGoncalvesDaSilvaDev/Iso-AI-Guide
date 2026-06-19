@@ -80,7 +80,14 @@ export default function DocumentoDetail() {
       { id: id!, data: { format: "pdf" } },
       {
         onSuccess: (res) => {
-          window.open(res.url, "_blank");
+          // Use a temporary anchor element instead of window.open to avoid popup blockers
+          const a = document.createElement("a");
+          a.href = res.url;
+          a.download = res.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          toast.success("Download iniciado!");
         },
         onError: () => toast.error("Erro ao gerar download.")
       }
