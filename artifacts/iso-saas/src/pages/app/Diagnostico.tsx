@@ -79,6 +79,62 @@ export default function Diagnostico() {
 
   const latestDiagnostic = diagnostics && diagnostics.length > 0 ? diagnostics[0] : null;
 
+  // Check if diagnostic is outdated
+  if (latestDiagnostic?.status === "outdated") {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Diagnóstico IA</h1>
+          <p className="text-muted-foreground mt-1">
+            A IA analisa sua empresa e cria um plano de adequação sob medida.
+          </p>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-4">
+          <StepProgress steps={steps} />
+        </div>
+
+        <Alert className="bg-amber-50 border-amber-200">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800">
+            Seus dados foram atualizados. O diagnóstico anterior ficou desatualizado e precisa ser regenerado com as novas informações.
+          </AlertDescription>
+        </Alert>
+
+        <Card className="border-primary/20">
+          <CardHeader>
+            <CardTitle>Regenerar Diagnóstico</CardTitle>
+            <CardDescription>
+              Clique no botão abaixo para gerar um novo diagnóstico com os dados atualizados.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label htmlFor="additionalInfo">Informações adicionais <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <Textarea
+                id="additionalInfo"
+                placeholder="Ex: Já temos processos de RH documentados, mas precisamos estruturar a área de produção e controle de qualidade."
+                className="h-32 resize-none"
+                value={additionalInfo}
+                onChange={(e) => setAdditionalInfo(e.target.value)}
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="bg-muted/30 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Activity className="h-4 w-4 shrink-0" />
+              A IA leva em torno de 30–60 segundos para gerar seu diagnóstico completo.
+            </p>
+            <Button onClick={handleGenerate} size="lg" className="gap-2 w-full sm:w-auto">
+              Regenerar agora
+              <RefreshCcw className="h-4 w-4" />
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
