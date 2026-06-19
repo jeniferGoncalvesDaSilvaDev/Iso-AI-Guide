@@ -10,6 +10,14 @@ import NotFound from "@/pages/not-found";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import Dashboard from "@/pages/app/Dashboard";
+import Normas from "@/pages/app/Normas";
+import Diagnostico from "@/pages/app/Diagnostico";
+import Documentos from "@/pages/app/Documentos";
+import DocumentoDetail from "@/pages/app/DocumentoDetail";
+import Chat from "@/pages/app/Chat";
+import Empresas from "@/pages/app/Empresas";
+import Auditoria from "@/pages/app/Auditoria";
+import Configuracoes from "@/pages/app/Configuracoes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,14 +33,14 @@ function AppRoutes() {
     <AppLayout>
       <Switch>
         <Route path="/app/dashboard" component={Dashboard} />
-        <Route path="/app/normas" component={() => <div>Normas</div>} />
-        <Route path="/app/diagnostico" component={() => <div>Diagnóstico</div>} />
-        <Route path="/app/documentos" component={() => <div>Documentos</div>} />
-        <Route path="/app/documentos/:id" component={() => <div>Documento Detalhe</div>} />
-        <Route path="/app/chat" component={() => <div>Chat</div>} />
-        <Route path="/app/empresas" component={() => <div>Empresas</div>} />
-        <Route path="/app/auditoria" component={() => <div>Auditoria</div>} />
-        <Route path="/app/configuracoes" component={() => <div>Configurações</div>} />
+        <Route path="/app/normas" component={Normas} />
+        <Route path="/app/diagnostico" component={Diagnostico} />
+        <Route path="/app/documentos" component={Documentos} />
+        <Route path="/app/documentos/:id" component={DocumentoDetail} />
+        <Route path="/app/chat" component={Chat} />
+        <Route path="/app/empresas" component={Empresas} />
+        <Route path="/app/auditoria" component={Auditoria} />
+        <Route path="/app/configuracoes" component={Configuracoes} />
         <Route component={NotFound} />
       </Switch>
     </AppLayout>

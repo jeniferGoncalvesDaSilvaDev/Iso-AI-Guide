@@ -27,12 +27,11 @@ export default function Diagnostico() {
     "Finalizando diagnóstico..."
   ];
 
-  const { data: diagnostics, isLoading } = useListDiagnostics({
-    query: {
-      enabled: !!user?.companyId,
-      queryKey: user?.companyId ? getListDiagnosticsQueryKey({ companyId: user.companyId }) : ["diagnostics"]
-    }
-  });
+  const diagParams = { companyId: user?.companyId ?? undefined };
+  const { data: diagnostics, isLoading } = useListDiagnostics(
+    diagParams,
+    { query: { enabled: !!user?.companyId, queryKey: getListDiagnosticsQueryKey(diagParams) } }
+  );
 
   const createDiagnosticMutation = useCreateDiagnostic();
 

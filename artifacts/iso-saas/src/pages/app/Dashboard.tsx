@@ -8,19 +8,16 @@ import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary({
-    query: {
-      enabled: !!user?.companyId,
-      queryKey: user?.companyId ? getGetDashboardSummaryQueryKey({ companyId: user.companyId }) : ["dashboard-summary"]
-    }
-  });
+  const dashParams = { companyId: user?.companyId ?? undefined };
+  const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary(
+    dashParams,
+    { query: { enabled: !!user?.companyId, queryKey: getGetDashboardSummaryQueryKey(dashParams) } }
+  );
 
-  const { data: activity, isLoading: isLoadingActivity } = useGetRecentActivity({
-    query: {
-      enabled: !!user?.companyId,
-      queryKey: user?.companyId ? getGetRecentActivityQueryKey({ companyId: user.companyId }) : ["dashboard-activity"]
-    }
-  });
+  const { data: activity, isLoading: isLoadingActivity } = useGetRecentActivity(
+    dashParams,
+    { query: { enabled: !!user?.companyId, queryKey: getGetRecentActivityQueryKey(dashParams) } }
+  );
 
   if (!user?.companyId) {
     return (

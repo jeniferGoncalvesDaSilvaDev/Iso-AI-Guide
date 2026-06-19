@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { setAuthTokenGetter } from "@workspace/api-client-react";
-import type { User } from "@workspace/api-client-react/src/generated/api.schemas";
-import { getMe } from "@workspace/api-client-react/src/generated/api";
+import { setAuthTokenGetter, getMe } from "@workspace/api-client-react";
+import type { User } from "@workspace/api-client-react";
 
 interface AuthContextType {
   user: User | null;

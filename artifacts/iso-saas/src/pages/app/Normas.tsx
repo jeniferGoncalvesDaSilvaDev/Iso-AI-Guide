@@ -17,16 +17,13 @@ export default function Normas() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
 
-  const { data: standards, isLoading: isLoadingStandards } = useListStandards({
-    query: { queryKey: getListStandardsQueryKey() }
-  });
+  const { data: standards, isLoading: isLoadingStandards } = useListStandards();
 
-  const { data: companyStandards, isLoading: isLoadingCompanyStandards } = useGetCompanyStandards({
-    query: {
-      enabled: !!user?.companyId,
-      queryKey: user?.companyId ? getGetCompanyStandardsQueryKey({ companyId: user.companyId }) : ["company-standards"]
-    }
-  });
+  const companyId = user?.companyId ?? "";
+  const { data: companyStandards, isLoading: isLoadingCompanyStandards } = useGetCompanyStandards(
+    companyId,
+    { query: { enabled: !!user?.companyId, queryKey: getGetCompanyStandardsQueryKey(companyId) } }
+  );
 
   const selectStandardsMutation = useSelectCompanyStandards();
 
@@ -49,11 +46,11 @@ export default function Normas() {
     }
 
     selectStandardsMutation.mutate(
-      { data: { standardIds: selectedIds } },
+      { id: user.companyId, data: { standardIds: selectedIds } },
       {
         onSuccess: () => {
           toast.success("Normas selecionadas com sucesso!");
-          queryClient.invalidateQueries({ queryKey: getGetCompanyStandardsQueryKey({ companyId: user.companyId! }) });
+          queryClient.invalidateQueries({ queryKey: getGetCompanyStandardsQueryKey(user.companyId!) });
         },
         onError: () => {
           toast.error("Erro ao salvar as normas. Tente novamente.");
