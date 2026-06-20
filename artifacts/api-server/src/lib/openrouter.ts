@@ -9,17 +9,8 @@ const BASE_URL = "https://openrouter.ai/api/v1";
 // Modelos gratuitos testados do OpenRouter
 // Free models: https://openrouter.ai/models?free=1
 const MODELS = [
-  // Modelos solicitados pelo usuario
   "openai/gpt-oss-120b:free",
   "google/gemma-4-31b-it:free",
-  // Fallbacks adicionais
-  "google/gemini-2.0-flash-exp:free",
-  "deepseek/deepseek-chat:free",
-  "qwen/qwen-2.5-coder-32b-instruct:free",
-  "mistralai/mistral-small-24b-instruct-2501:free",
-  "cognitivecomputations/dolphin-mixtral-8x7b:free",
-  "microsoft/phi-3.5-mini-128k-instruct:free",
-  "nousresearch/hermes-3-llama-3.1-405b:free",
 ];
 
 export interface ChatCompletionMessage {
