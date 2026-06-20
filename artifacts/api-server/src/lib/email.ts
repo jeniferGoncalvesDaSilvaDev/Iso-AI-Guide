@@ -34,7 +34,8 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
   if (t) {
     try {
       await t.sendMail({
-        from: `"${APP_NAME}" <${FROM_EMAIL}>`,
+        // Use FROM_EMAIL directly if it contains angle brackets (already has name), otherwise format
+    from: FROM_EMAIL.includes("<") ? FROM_EMAIL : `"${APP_NAME}" <${FROM_EMAIL}>`,
         to,
         subject,
         html,
