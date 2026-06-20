@@ -235,8 +235,15 @@ export default function Documentos() {
     setGenerationMsg(GENERATION_MSGS[0]);
     setJobId(null);
 
+    // Check if company was just updated - if so, replace old docs
+    const companyUpdated = localStorage.getItem("company_updated") === "true";
+    if (companyUpdated) localStorage.removeItem("company_updated");
+
+    const body: any = { companyId: user.companyId, standardId: standards[0].id, diagnosticId };
+    if (companyUpdated) body.replaceExisting = true;
+
     generateDocsMutation.mutate(
-      { data: { companyId: user.companyId, standardId: standards[0].id, diagnosticId } },
+      { data: body },
       {
         onSuccess: (res: any) => {
           if (res?.jobId) setJobId(res.jobId);

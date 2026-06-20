@@ -95,6 +95,7 @@ export default function Empresas() {
             {
               onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: getListDiagnosticsQueryKey({ companyId: user.companyId! }) });
+                localStorage.setItem("company_updated", "true");
                 toast.success("Diagnóstico atualizado! Agora gere os documentos com os novos dados.");
                 setLocation("/app/documentos");
               },

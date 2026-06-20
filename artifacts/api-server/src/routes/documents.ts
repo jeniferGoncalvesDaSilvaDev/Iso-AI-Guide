@@ -93,6 +93,7 @@ router.post("/documents/generate", async (req, res): Promise<void> => {
     diagnosticId?: string;
     documentTypes?: string[];
   };
+  const replaceExisting = (req.body as any)?.replaceExisting === true;
 
   const [company] = await db
     .select()
@@ -276,23 +277,31 @@ ${diagnosticContext}` : ""}`;
 
         const title = `${typeLabel} - ${standard.code}`;
 
-        // Delete existing document for this company/standard/type (replace mode)
-        await db
-          .delete(documentsTable)
+        // If company was updated, replace existing docs; otherwise version them
+        const existing = await db
+          .select()
+          .from(documentsTable)
           .where(
             and(
               eq(documentsTable.companyId, companyId),
               eq(documentsTable.standardId, standardId),
               eq(documentsTable.type, docType),
             ),
-          );
+          )
+          .limit(1);
 
-        await db.insert(documentsTable).values({
-          companyId,
-          standardId,
-          standardCode: standard.code,
-          type: docType,
-          title,
+        if (existing.length > 0) {
+          if (replaceExisting) {
+            // Replace mode: delete old document and create fresh one
+            await db
+              .delete(documentsTable)
+              .where(eq(documentsTable.id, existing[0].id));
+            await db.insert(documentsTable).values({
+              companyId,
+              standardId,
+              standardCode: standard.code,
+              type: docType,
+              title,
           content,
           version: "00",
           status: "rascunho",
