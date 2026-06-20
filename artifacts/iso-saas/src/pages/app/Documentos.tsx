@@ -151,6 +151,7 @@ export default function Documentos() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationMsg, setGenerationMsg] = useState("");
+  const [jobId, setJobId] = useState<string | null>(null);
 
   const steps = useWorkflowSteps(location);
 
@@ -182,23 +183,45 @@ export default function Documentos() {
 
   const generateDocsMutation = useGenerateDocuments();
 
+  // Poll job progress in real time instead of simulating
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isGenerating && generationProgress < 95) {
-      const next = generationProgress + 5;
-      timer = setTimeout(() => {
-        setGenerationProgress(next);
-        const msgIdx = Math.floor((next / 100) * GENERATION_MSGS.length);
+    if (!isGenerating || !jobId) return;
+    
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/jobs/${jobId}`);
+        if (!res.ok) throw new Error("Job not found");
+        const job = await res.json();
+        
+        const total = job.totalDocuments || 1;
+        const pct = Math.round((job.progress / total) * 100);
+        setGenerationProgress(pct);
+        const msgIdx = Math.floor((pct / 100) * (GENERATION_MSGS.length - 1));
         setGenerationMsg(GENERATION_MSGS[Math.min(msgIdx, GENERATION_MSGS.length - 1)]);
-      }, 600);
-    } else if (isGenerating && generationProgress >= 95) {
-      setIsGenerating(false);
-      setGenerationProgress(0);
-      queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey({ companyId: user?.companyId! }) });
-      toast.success("Documentos criados e salvos na sua conta!");
-    }
-    return () => clearTimeout(timer);
-  }, [isGenerating, generationProgress, queryClient, user?.companyId]);
+
+        if (job.status === "completed") {
+          setGenerationProgress(100);
+          setGenerationMsg("Finalizado!");
+          setIsGenerating(false);
+          setJobId(null);
+          setGenerationProgress(0);
+          queryClient.invalidateQueries({ queryKey: getListDocumentsQueryKey({ companyId: user?.companyId! }) });
+          toast.success("Documentos criados e salvos na sua conta!");
+        } else if (job.status === "failed") {
+          setIsGenerating(false);
+          setJobId(null);
+          setGenerationProgress(0);
+          toast.error(job.errorMessage || "Erro ao gerar documentos. Tente novamente.");
+        }
+      } catch {
+        // Keep polling even if request fails
+      }
+    };
+
+    poll();
+    const interval = setInterval(poll, 2000);
+    return () => clearInterval(interval);
+  }, [isGenerating, jobId, queryClient, user?.companyId]);
 
   const handleGenerate = () => {
     if (!user?.companyId) return;
@@ -210,12 +233,17 @@ export default function Documentos() {
     setIsGenerating(true);
     setGenerationProgress(0);
     setGenerationMsg(GENERATION_MSGS[0]);
+    setJobId(null);
 
     generateDocsMutation.mutate(
       { data: { companyId: user.companyId, standardId: standards[0].id, diagnosticId } },
       {
+        onSuccess: (res: any) => {
+          if (res?.jobId) setJobId(res.jobId);
+        },
         onError: () => {
           setIsGenerating(false);
+          setJobId(null);
           toast.error("Não foi possível gerar os documentos. Tente novamente ou contate o suporte.");
         }
       }

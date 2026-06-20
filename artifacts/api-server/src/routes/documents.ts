@@ -276,48 +276,28 @@ ${diagnosticContext}` : ""}`;
 
         const title = `${typeLabel} - ${standard.code}`;
 
-        const existing = await db
-          .select()
-          .from(documentsTable)
+        // Delete existing document for this company/standard/type (replace mode)
+        await db
+          .delete(documentsTable)
           .where(
             and(
               eq(documentsTable.companyId, companyId),
               eq(documentsTable.standardId, standardId),
               eq(documentsTable.type, docType),
             ),
-          )
-          .limit(1);
+          );
 
-        if (existing.length > 0) {
-          const doc = existing[0]!;
-          const currentVersion = parseInt(doc.version, 10);
-          const newVersion = String(currentVersion + 1).padStart(2, "0");
-
-          await db.insert(documentRevisionsTable).values({
-            documentId: doc.id,
-            version: doc.version,
-            content: doc.content,
-            revisionReason: "Regenerado pela IA",
-            createdBy: req.user?.userId ?? null,
-          });
-
-          await db
-            .update(documentsTable)
-            .set({ content, version: newVersion, status: "rascunho" })
-            .where(eq(documentsTable.id, doc.id));
-        } else {
-          await db.insert(documentsTable).values({
-            companyId,
-            standardId,
-            standardCode: standard.code,
-            type: docType,
-            title,
-            content,
-            version: "00",
-            status: "rascunho",
-            createdBy: req.user?.userId ?? null,
-          });
-        }
+        await db.insert(documentsTable).values({
+          companyId,
+          standardId,
+          standardCode: standard.code,
+          type: docType,
+          title,
+          content,
+          version: "00",
+          status: "rascunho",
+          createdBy: req.user?.userId ?? null,
+        });
 
         progress++;
         await db
@@ -531,6 +511,22 @@ router.post("/documents/:id/download", async (req, res): Promise<void> => {
   res.send(htmlContent);
 
   await logAudit(req, "document.download", "document", params.data.id);
+});
+
+
+// Get job status for progress polling
+router.get("/jobs/:id", async (req, res): Promise<void> => {
+  const [job] = await db
+    .select()
+    .from(jobsTable)
+    .where(eq(jobsTable.id, req.params.id));
+
+  if (!job) {
+    res.status(404).json({ error: "Job não encontrado" });
+    return;
+  }
+
+  res.json(job);
 });
 
 export default router;
