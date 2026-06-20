@@ -9,6 +9,10 @@ const BASE_URL = "https://openrouter.ai/api/v1";
 // Modelos gratuitos testados do OpenRouter
 // Free models: https://openrouter.ai/models?free=1
 const MODELS = [
+  // Modelos solicitados pelo usuario
+  "openai/gpt-oss-120b:free",
+  "google/gemma-4-31b-it:free",
+  // Fallbacks adicionais
   "google/gemini-2.0-flash-exp:free",
   "deepseek/deepseek-chat:free",
   "qwen/qwen-2.5-coder-32b-instruct:free",
