@@ -80,14 +80,28 @@ export default function DocumentoDetail() {
       { id: id!, data: { format: "pdf" } },
       {
         onSuccess: (res) => {
-          // Use a temporary anchor element instead of window.open to avoid popup blockers
-          const a = document.createElement("a");
-          a.href = res.url;
-          a.download = res.filename;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          toast.success("Download iniciado!");
+          // Usa fetch direto para baixar o arquivo e criar blob URL
+          // Isso evita problemas com autenticação e popup blockers
+          fetch(res.url)
+            .then(response => {
+              if (!response.ok) throw new Error("Erro ao baixar");
+              return response.blob();
+            })
+            .then(blob => {
+              const blobUrl = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = blobUrl;
+              a.download = res.filename || "documento.pdf";
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(blobUrl);
+              toast.success("Download concluído!");
+            })
+            .catch(() => {
+              // Fallback: tenta abrir direto
+              window.open(res.url, "_blank");
+            });
         },
         onError: () => toast.error("Erro ao gerar download.")
       }
