@@ -2,10 +2,10 @@ import nodemailer from "nodemailer";
 import { logger } from "./logger";
 
 const SMTP_HOST = process.env.SMTP_HOST || "";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
-const SMTP_USER = process.env.SMTP_USER || "";
-const SMTP_PASS = process.env.SMTP_PASS || "";
-const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@iso-guide.com";
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || "2525", 10);
+const SMTP_USER = process.env.SMTP_USER || process.env.SMTP_USERNAME || "";
+const SMTP_PASS = process.env.SMTP_PASS || process.env.SMTP_PASSWORD || "";
+const FROM_EMAIL = process.env.FROM_EMAIL || process.env.EMAIL_FROM || "noreply@iso-guide.com";
 const APP_NAME = "Iso AI Guide";
 
 let transporter: nodemailer.Transporter | null = null;
