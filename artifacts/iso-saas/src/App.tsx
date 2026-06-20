@@ -10,7 +10,6 @@ import NotFound from "@/pages/not-found";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
-import ResetPassword from "@/pages/auth/ResetPassword";
 import Dashboard from "@/pages/app/Dashboard";
 import Normas from "@/pages/app/Normas";
 import Diagnostico from "@/pages/app/Diagnostico";
@@ -57,7 +56,6 @@ function Router() {
       <Route path="/" component={Login} />
       <Route path="/cadastro" component={Register} />
       <Route path="/esqueci-senha" component={ForgotPassword} />
-      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/app/*" component={() => <PrivateRoute component={AppRoutes} />} />
       <Route component={NotFound} />
     </Switch>

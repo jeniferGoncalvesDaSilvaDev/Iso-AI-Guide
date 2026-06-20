@@ -324,4 +324,43 @@ router.post("/auth/reset-password", async (req, res): Promise<void> => {
   res.json({ message: "Senha redefinida com sucesso!" });
 });
 
+
+// ─── Password Reset Direct (no email) ──────────────────────────────────────
+
+router.post("/auth/reset-password-direct", async (req, res): Promise<void> => {
+  const { email, password } = req.body as { email?: string; password?: string };
+  if (!email || !password) {
+    res.status(400).json({ error: "Email e nova senha são obrigatórios" });
+    return;
+  }
+
+  if (password.length < 8) {
+    res.status(400).json({ error: "A senha deve ter pelo menos 8 caracteres" });
+    return;
+  }
+
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.email, email))
+    .limit(1);
+
+  if (!user) {
+    res.status(404).json({ error: "Email não encontrado" });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+
+  await db
+    .update(usersTable)
+    .set({ passwordHash })
+    .where(eq(usersTable.id, user.id));
+
+  await logAudit(req, "user.reset-password", "user", user.id);
+
+  res.json({ message: "Senha redefinida com sucesso!" });
+});
+
 export default router;
+
