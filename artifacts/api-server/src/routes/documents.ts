@@ -212,7 +212,7 @@ Norma: ${standard.code} - ${standard.name}
 - Data de Emissão: [data atual]
 - Próxima Revisão: [data atual + 1 ano]
 
-**CORPO DO DOCUMENTO (mínimo 2000 caracteres)**
+**CORPO DO DOCUMENTO (4 a 8 páginas)**
 
 1. OBJETIVO
    Descrever claramente o propósito do documento, alinhado com a ISO 9001:2015
@@ -267,7 +267,7 @@ Norma: ${standard.code} - ${standard.name}
 3. Linguagem técnica e profissional, mas acessível
 4. Conteúdo prático e aplicável, com exemplos concretos
 5. Profundidade compatível com consultoria de R$ 15.000 a R$ 30.000
-6. Mínimo de 2000 caracteres por documento
+6. Mínimo de 4 a 8 páginas por documento (conteúdo detalhado e completo)
 
 **IMPORTANTE:** 
 - Gere os documentos em português do Brasil
