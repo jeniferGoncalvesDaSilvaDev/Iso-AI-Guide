@@ -158,10 +158,16 @@ Diagnóstico organizacional:
         }
       }
 
-      for (const docType of typesToGenerate) {
-        const typeLabel = DOCUMENT_TYPES.find((d) => d.type === docType)?.label ?? docType;
+      
+      // Generate documents in parallel batches of 3 for speed
+      const BATCH_SIZE = 3;
+      const docTypes = [...typesToGenerate];
+      for (let batchIdx = 0; batchIdx < docTypes.length; batchIdx += BATCH_SIZE) {
+        const batch = docTypes.slice(batchIdx, batchIdx + BATCH_SIZE);
+        await Promise.all(batch.map(async (docType) => {
+          const typeLabel = DOCUMENT_TYPES.find((d) => d.type === docType)?.label ?? docType;
 
-        const prompt = `Você é um consultor líder ISO 9001:2015 com vasta experiência em implementação e auditoria de certificação em empresas de manufatura, metalurgia e indústria em geral.
+          const prompt = `Você é um consultor líder ISO 9001:2015 com vasta experiência em implementação e auditoria de certificação em empresas de manufatura, metalurgia e indústria em geral.
 
 **FASE 1: DIAGNÓSTICO E PLANEJAMENTO (OBRIGATÓRIO)**
 
@@ -270,77 +276,72 @@ Norma: ${standard.code} - ${standard.name}
 ${diagnosticContext ? `**CONTEXTO DO DIAGNÓSTICO:**
 ${diagnosticContext}` : ""}`;
 
-        const content = await chat([
-          { role: "system", content: "Você é um especialista em normas ISO com 20 anos de experiência na implementação de sistemas de gestão." },
-          { role: "user", content: prompt },
-        ]);
+          const rawContent = await chat([
+            { role: "system", content: "Você é um especialista em normas ISO." },
+            { role: "user", content: prompt },
+          ]);
 
-        const title = `${typeLabel} - ${standard.code}`;
+          const title = `${typeLabel} - ${standard.code}`;
 
-        // If company was updated, replace existing docs; otherwise version them
-        const existing = await db
-          .select()
-          .from(documentsTable)
-          .where(
-            and(
-              eq(documentsTable.companyId, companyId),
-              eq(documentsTable.standardId, standardId),
-              eq(documentsTable.type, docType),
-            ),
-          )
-          .limit(1);
+          // If company was updated, replace existing docs; otherwise version them
+          const [existing] = await db
+            .select()
+            .from(documentsTable)
+            .where(
+              and(
+                eq(documentsTable.companyId, companyId),
+                eq(documentsTable.standardId, standardId),
+                eq(documentsTable.type, docType),
+              ),
+            )
+            .limit(1);
 
-        if (existing.length > 0) {
-          if (replaceExisting) {
-            // Replace mode: delete old document and create fresh one
-            await db
-              .delete(documentsTable)
-              .where(eq(documentsTable.id, existing[0].id));
+          if (existing) {
+            if (replaceExisting) {
+              await db
+                .delete(documentsTable)
+                .where(eq(documentsTable.id, existing.id));
+              await db.insert(documentsTable).values({
+                companyId,
+                standardId,
+                standardCode: standard.code,
+                type: docType,
+                title,
+                content: rawContent,
+                version: "00",
+                status: "rascunho",
+                createdBy: req.user?.userId ?? null,
+              });
+            } else {
+              const currentVersion = parseInt(existing.version, 10);
+              const newVersion = String(currentVersion + 1).padStart(2, "0");
+              await db.insert(documentRevisionsTable).values({
+                documentId: existing.id,
+                version: existing.version,
+                content: existing.content,
+                revisionReason: "Regenerado pela IA",
+                createdBy: req.user?.userId ?? null,
+              });
+              await db
+                .update(documentsTable)
+                .set({ content: rawContent, version: newVersion, status: "rascunho" })
+                .where(eq(documentsTable.id, existing.id));
+            }
+          } else {
             await db.insert(documentsTable).values({
               companyId,
               standardId,
               standardCode: standard.code,
               type: docType,
               title,
-              content,
+              content: rawContent,
               version: "00",
               status: "rascunho",
               createdBy: req.user?.userId ?? null,
             });
-          } else {
-            // Version mode: keep old doc in revisions, increment version
-            const doc = existing[0];
-            const currentVersion = parseInt(doc.version, 10);
-            const newVersion = String(currentVersion + 1).padStart(2, "0");
-
-            await db.insert(documentRevisionsTable).values({
-              documentId: doc.id,
-              version: doc.version,
-              content: doc.content,
-              revisionReason: "Regenerado pela IA",
-              createdBy: req.user?.userId ?? null,
-            });
-
-            await db
-              .update(documentsTable)
-              .set({ content, version: newVersion, status: "rascunho" })
-              .where(eq(documentsTable.id, doc.id));
           }
-        } else {
-          await db.insert(documentsTable).values({
-            companyId,
-            standardId,
-            standardCode: standard.code,
-            type: docType,
-            title,
-            content,
-            version: "00",
-            status: "rascunho",
-            createdBy: req.user?.userId ?? null,
-          });
-        }
-
-        progress++;
+        }));
+        progress = batchIdx + batch.length;
         await db
           .update(jobsTable)
           .set({ progress })
