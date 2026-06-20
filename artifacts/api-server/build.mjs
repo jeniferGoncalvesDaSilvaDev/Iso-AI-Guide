@@ -63,6 +63,7 @@ async function buildAll() {
       "@aws-sdk/*",
       "@azure/*",
       "@opentelemetry/*",
+      "dotenv",
       "@google-cloud/*",
       "@google/*",
       "googleapis",
