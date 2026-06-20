@@ -1,6 +1,7 @@
 import { logger } from "./logger";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+if (!OPENROUTER_API_KEY) { logger.error("OPENROUTER_API_KEY not set!"); } else { logger.info("OPENROUTER_API_KEY is set (length: " + OPENROUTER_API_KEY.length + ")"); }
 const BASE_URL = "https://openrouter.ai/api/v1";
 
 const MODELS = [
