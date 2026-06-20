@@ -33,6 +33,10 @@ minimumReleaseAgeExclude:
   # this setting guards against does not apply to our own packages.
   - '@replit/*'
   - stripe-replit-sync
+  # Exclude pnpm itself — Corepack bootstraps pnpm by running `pnpm add pnpm@<ver>`
+  # which reads this workspace config. If pnpm was just released it would block itself.
+  - pnpm
+  - '@pnpm/exe'
 
 packages:
   - artifacts/*
@@ -160,6 +164,3 @@ overrides:
   "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0"
   esbuild: "0.27.3"
 
-allowBuilds:
-  bcrypt: false
-  esbuild: false
