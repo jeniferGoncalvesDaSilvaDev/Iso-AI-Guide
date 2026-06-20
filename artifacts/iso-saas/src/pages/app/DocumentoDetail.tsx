@@ -4,7 +4,6 @@ import {
   useGetDocument, 
   useUpdateDocument,
   useGetDocumentRevisions,
-  useDownloadDocument,
   getGetDocumentQueryKey
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -40,7 +39,6 @@ export default function DocumentoDetail() {
   });
 
   const updateMutation = useUpdateDocument();
-  const downloadMutation = useDownloadDocument();
 
   if (doc && !initialized) {
     setContent(doc.content || "");
@@ -76,36 +74,39 @@ export default function DocumentoDetail() {
 
   const handleDownload = () => {
     toast.info("Preparando download...");
-    downloadMutation.mutate(
-      { id: id!, data: { format: "pdf" } },
-      {
-        onSuccess: (res) => {
-          // Usa fetch direto para baixar o arquivo e criar blob URL
-          // Isso evita problemas com autenticação e popup blockers
-          fetch(res.url)
-            .then(response => {
-              if (!response.ok) throw new Error("Erro ao baixar");
-              return response.blob();
-            })
-            .then(blob => {
-              const blobUrl = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = blobUrl;
-              a.download = res.filename || "documento.pdf";
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(blobUrl);
-              toast.success("Download concluído!");
-            })
-            .catch(() => {
-              // Fallback: tenta abrir direto
-              window.open(res.url, "_blank");
-            });
-        },
-        onError: () => toast.error("Erro ao gerar download.")
-      }
-    );
+    // Chama o endpoint POST diretamente com o token de autenticação
+    // O endpoint agora retorna o arquivo diretamente (não mais um JSON com URL)
+    const token = localStorage.getItem("iso_access_token");
+    fetch(`/api/documents/${id}/download`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ format: "pdf" }),
+    })
+      .then(response => {
+        if (!response.ok) throw new Error("Erro ao baixar");
+        const disposition = response.headers.get("Content-Disposition") || "";
+        const match = disposition.match(/filename="?(.+?)"?$/);
+        const filename = match ? match[1] : "documento.pdf";
+        return response.blob().then(blob => ({ blob, filename }));
+      })
+      .then(({ blob, filename }) => {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+        toast.success("Download concluído!");
+      })
+      .catch((err) => {
+        console.error("Download error:", err);
+        toast.error("Erro ao fazer download. Tente novamente.");
+      });
   };
 
   if (isLoading) {

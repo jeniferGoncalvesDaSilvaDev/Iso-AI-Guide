@@ -23,8 +23,8 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5000, // 5s before considering data stale
+      refetchOnWindowFocus: true,
+      staleTime: 0, // Always fetch fresh data on mount/focus to avoid stale displays
       gcTime: 1000 * 60 * 5, // 5min garbage collection
     },
   },

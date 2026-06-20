@@ -10,6 +10,7 @@ import {
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt";
 import { authenticateToken } from "../middlewares/auth";
 import { logAudit } from "../lib/audit";
+import { sendWelcomeEmail, sendResetPasswordEmail } from "../lib/email";
 
 const router = Router();
 
@@ -99,7 +100,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   await logAudit(req, "user.register", "user", user.id);
 
   // Send welcome email (non-blocking)
-  import("../lib/email").then(m => m.sendWelcomeEmail(user.email, user.name)).catch(() => {});
+  sendWelcomeEmail(user.email, user.name).catch(() => {});
 
   res.status(201).json({
     user: {
@@ -278,7 +279,7 @@ router.post("/auth/forgot-password", async (req, res): Promise<void> => {
     .where(eq(usersTable.id, user.id));
 
   // Send reset email
-  import("../lib/email").then(m => m.sendResetPasswordEmail(user.email, user.name, resetToken)).catch(() => {});
+  sendResetPasswordEmail(user.email, user.name, resetToken).catch(() => {});
 
   res.json({ message: "Se o email existir, você receberá um link para redefinir sua senha." });
 });
