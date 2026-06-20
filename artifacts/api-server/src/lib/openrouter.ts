@@ -88,9 +88,9 @@ export async function chat(
   for (const model of backupModels) {
     try {
       logger.info({ model }, "Trying backup model");
-      return await callModel(model, messages, { ...options, timeoutMs: 30000 });
+      return await callModel(model, messages, { ...options, timeoutMs: 90000 });
     } catch (err) {
-      logger.warn({ model, err }, "Backup model failed");
+      logger.warn({ model, err: String(err) }, "Backup model failed");
     }
   }
   throw new Error("All models failed");

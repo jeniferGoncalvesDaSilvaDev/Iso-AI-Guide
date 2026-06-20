@@ -23,6 +23,7 @@ import {
 import { authenticateToken } from "../middlewares/auth";
 import { chat } from "../lib/openrouter";
 import { logAudit } from "../lib/audit";
+import { logger } from "../lib/logger";
 
 const router = Router();
 
@@ -164,7 +165,8 @@ Diagnóstico organizacional:
       const docTypes = [...typesToGenerate];
       for (let batchIdx = 0; batchIdx < docTypes.length; batchIdx += BATCH_SIZE) {
         const batch = docTypes.slice(batchIdx, batchIdx + BATCH_SIZE);
-        await Promise.all(batch.map(async (docType) => {
+        // Use allSettled so one failure doesn't kill the entire batch
+        const results = await Promise.allSettled(batch.map(async (docType) => {
           const typeLabel = DOCUMENT_TYPES.find((d) => d.type === docType)?.label ?? docType;
 
           const prompt = `Você é um consultor líder ISO 9001:2015 com vasta experiência em implementação e auditoria de certificação em empresas de manufatura, metalurgia e indústria em geral.
@@ -341,6 +343,12 @@ ${diagnosticContext}` : ""}`;
             });
           }
         }));
+        // Log any failures but continue with successful docs
+        for (const r of results) {
+          if (r.status === "rejected") {
+            logger?.error?.({ err: r.reason }, "Document generation failed in batch") || console.error("Document failed:", r.reason);
+          }
+        }
         progress = batchIdx + batch.length;
         await db
           .update(jobsTable)
