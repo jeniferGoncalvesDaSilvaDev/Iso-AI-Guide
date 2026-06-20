@@ -31,7 +31,7 @@ async function callModel(
   messages: ChatCompletionMessage[],
   options: CompletionOptions = {},
 ): Promise<string> {
-  const { temperature = 0.7, maxTokens = 4096, timeoutMs = 60000 } = options;
+  const { temperature = 0.7, maxTokens = 2048, timeoutMs = 120000 } = options;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -72,17 +72,25 @@ export async function chat(
   messages: ChatCompletionMessage[],
   options: CompletionOptions = {},
 ): Promise<string> {
-  for (let attempt = 0; attempt < MODELS.length; attempt++) {
-    const model = MODELS[attempt]!;
+  // Try primary model first, then skip to backup quickly
+  const primaryModel = MODELS[0];
+  const backupModels = MODELS.slice(1);
+
+  // Try primary with generous timeout
+  try {
+    logger.info({ model: primaryModel }, "Calling OpenRouter");
+    return await callModel(primaryModel!, messages, { ...options, timeoutMs: options.timeoutMs || 120000 });
+  } catch (err) {
+    logger.warn({ model: primaryModel, err }, "Primary model failed, trying backups...");
+  }
+
+  // Try each backup quickly (shorter timeout per attempt)
+  for (const model of backupModels) {
     try {
-      logger.info({ model, attempt }, "Calling OpenRouter");
-      const result = await callModel(model, messages, options);
-      return result;
+      logger.info({ model }, "Trying backup model");
+      return await callModel(model, messages, { ...options, timeoutMs: 30000 });
     } catch (err) {
-      logger.warn({ model, attempt, err }, "Model failed, trying fallback");
-      if (attempt === MODELS.length - 1) {
-        throw err;
-      }
+      logger.warn({ model, err }, "Backup model failed");
     }
   }
   throw new Error("All models failed");
