@@ -8,6 +8,8 @@ const BASE_URL = "https://openrouter.ai/api/v1";
 // Veja modelos gratuitos em: https://openrouter.ai/models?free=1
 const MODELS = [
   "google/gemini-2.0-flash-exp:free",
+  "google/gemma-4-31b-it:free",
+  "openai/gpt-oss-120b:free",
   "mistralai/mistral-small-24b-instruct-2501:free",
   "qwen/qwen-2.5-coder-32b-instruct:free",
   "deepseek/deepseek-chat:free",
