@@ -4,10 +4,13 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 if (!OPENROUTER_API_KEY) { logger.error("OPENROUTER_API_KEY not set!"); } else { logger.info("OPENROUTER_API_KEY is set (length: " + OPENROUTER_API_KEY.length + ")"); }
 const BASE_URL = "https://openrouter.ai/api/v1";
 
+// Modelos gratuitos do OpenRouter (atualize se esgotar o período grátis)
+// Veja modelos gratuitos em: https://openrouter.ai/models?free=1
 const MODELS = [
-  "openai/gpt-4o-mini",
-  "deepseek/deepseek-r1",
-  "meta-llama/llama-3.3-70b-instruct",
+  "google/gemini-2.0-flash-exp:free",
+  "mistralai/mistral-small-24b-instruct-2501:free",
+  "qwen/qwen-2.5-coder-32b-instruct:free",
+  "deepseek/deepseek-chat:free",
 ];
 
 export interface ChatCompletionMessage {
