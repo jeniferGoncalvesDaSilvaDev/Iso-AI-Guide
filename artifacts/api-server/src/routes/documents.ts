@@ -29,11 +29,36 @@ const router = Router();
 // All other routes require authentication
 router.use(authenticateToken);
 
+// Matriz documental completa baseada na ISO 9001:2015
 const DOCUMENT_TYPES = [
-  { type: "manual", label: "Manual do SGQ" },
-  { type: "procedimento", label: "Procedimento Operacional" },
-  { type: "registro", label: "Registro de Qualidade" },
-  { type: "formulario", label: "Formulário" },
+  // Estrutura do SGQ
+  { type: "sgq_escopo", label: "SGQ-01 Escopo do SGQ" },
+  { type: "sgq_mapa", label: "SGQ-02 Mapa de Processos" },
+  { type: "sgq_politica", label: "SGQ-03 Política da Qualidade" },
+  { type: "sgq_objetivos", label: "SGQ-04 Objetivos da Qualidade" },
+  // Procedimentos
+  { type: "pq_documentos", label: "PQ-01 Controle de Documentos e Registros" },
+  { type: "pq_nao_conformidade", label: "PQ-02 Controle de Não Conformidade e Ação Corretiva" },
+  { type: "pq_auditoria", label: "PQ-03 Auditoria Interna" },
+  { type: "pq_analise_critica", label: "PQ-04 Análise Crítica pela Direção" },
+  { type: "pq_produto_nao_conforme", label: "PQ-05 Controle de Produto Não Conforme" },
+  { type: "pq_rastreabilidade", label: "PQ-06 Rastreabilidade de Produção" },
+  { type: "pq_inspecao", label: "PQ-07 Inspeção e Controle da Qualidade" },
+  // Formulários
+  { type: "fq_lista_mestra", label: "FQ-01 Lista Mestra de Documentos" },
+  { type: "fq_nao_conformidade", label: "FQ-02 Registro de Não Conformidade" },
+  { type: "fq_auditoria", label: "FQ-03 Registro de Auditoria Interna" },
+  { type: "fq_ordem_producao", label: "FQ-04 Ordem de Produção" },
+  { type: "fq_inspecao", label: "FQ-05 Registro de Inspeção" },
+  { type: "fq_treinamento", label: "FQ-06 Registro de Treinamento" },
+  // Registros
+  { type: "op_producao", label: "OP-2026-001 Ordem de Produção" },
+  { type: "rq_inspecao", label: "RQ-01 Registro de Inspeção (Resultados)" },
+  { type: "rq_retrabalho", label: "RQ-02 Registro de Retrabalho e Sucata" },
+  { type: "rt_treinamento", label: "RT-01 Registro de Treinamento" },
+  { type: "rt_lista_presenca", label: "RT-02 Lista de Presença" },
+  { type: "rt_matriz_competencia", label: "RT-03 Matriz de Competência" },
+  { type: "rc_calibracao", label: "RC-01 Registro de Calibração" },
 ];
 
 router.get("/documents", async (req, res): Promise<void> => {
@@ -178,7 +203,7 @@ Norma: ${standard.code} - ${standard.name}
 - Data de Emissão: [data atual]
 - Próxima Revisão: [data atual + 1 ano]
 
-**CORPO DO DOCUMENTO (mínimo 1200 palavras)**
+**CORPO DO DOCUMENTO (mínimo 2000 caracteres)**
 
 1. OBJETIVO
    Descrever claramente o propósito do documento, alinhado com a ISO 9001:2015
@@ -233,7 +258,7 @@ Norma: ${standard.code} - ${standard.name}
 3. Linguagem técnica e profissional, mas acessível
 4. Conteúdo prático e aplicável, com exemplos concretos
 5. Profundidade compatível com consultoria de R$ 15.000 a R$ 30.000
-6. Mínimo de 1200 palavras por documento
+6. Mínimo de 2000 caracteres por documento
 
 **IMPORTANTE:** 
 - Gere os documentos em português do Brasil
