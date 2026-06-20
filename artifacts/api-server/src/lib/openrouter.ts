@@ -33,7 +33,7 @@ async function callModel(
   messages: ChatCompletionMessage[],
   options: CompletionOptions = {},
 ): Promise<string> {
-  const { temperature = 0.7, maxTokens = 2048, timeoutMs = 120000 } = options;
+  const { temperature = 0.7, maxTokens = 4096, timeoutMs = 120000 } = options;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
