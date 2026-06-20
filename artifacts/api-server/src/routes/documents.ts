@@ -302,11 +302,43 @@ ${diagnosticContext}` : ""}`;
               standardCode: standard.code,
               type: docType,
               title,
-          content,
-          version: "00",
-          status: "rascunho",
-          createdBy: req.user?.userId ?? null,
-        });
+              content,
+              version: "00",
+              status: "rascunho",
+              createdBy: req.user?.userId ?? null,
+            });
+          } else {
+            // Version mode: keep old doc in revisions, increment version
+            const doc = existing[0];
+            const currentVersion = parseInt(doc.version, 10);
+            const newVersion = String(currentVersion + 1).padStart(2, "0");
+
+            await db.insert(documentRevisionsTable).values({
+              documentId: doc.id,
+              version: doc.version,
+              content: doc.content,
+              revisionReason: "Regenerado pela IA",
+              createdBy: req.user?.userId ?? null,
+            });
+
+            await db
+              .update(documentsTable)
+              .set({ content, version: newVersion, status: "rascunho" })
+              .where(eq(documentsTable.id, doc.id));
+          }
+        } else {
+          await db.insert(documentsTable).values({
+            companyId,
+            standardId,
+            standardCode: standard.code,
+            type: docType,
+            title,
+            content,
+            version: "00",
+            status: "rascunho",
+            createdBy: req.user?.userId ?? null,
+          });
+        }
 
         progress++;
         await db
