@@ -12,10 +12,9 @@ const MODELS = [
   // Modelos solicitados
   "openai/gpt-oss-20b:free",
   "google/gemma-4-31b-it:free",
-  // Fallbacks caso os acima retornem 404
-  "google/gemini-2.0-flash-exp:free",
-  "deepseek/deepseek-chat:free",
-  "qwen/qwen-2.5-coder-32b-instruct:free",
+  // Fallbacks
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
 ];
 
 export interface ChatCompletionMessage {
