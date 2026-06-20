@@ -220,8 +220,12 @@ export default function Dashboard() {
               </p>
             </>
           ) : (
-            <div className="text-center py-6 text-muted-foreground text-sm">
-              Não foi possível carregar as recomendações. Tente novamente.
+            <div className="text-center py-6 text-muted-foreground text-sm space-y-2">
+              <p>Não foi possível carregar as recomendações.</p>
+              <Button variant="outline" size="sm" onClick={() => refetchRecs()} className="gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Tentar novamente
+              </Button>
             </div>
           )}
         </CardContent>
