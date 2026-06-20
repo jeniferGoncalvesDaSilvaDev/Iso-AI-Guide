@@ -35,23 +35,37 @@ export default function Diagnostico() {
   const diagParams = { companyId: user?.companyId ?? undefined };
   const { data: diagnostics, isLoading } = useListDiagnostics(
     diagParams,
-    { query: { enabled: !!user?.companyId, queryKey: getListDiagnosticsQueryKey(diagParams) } }
+    { 
+      query: { 
+        enabled: !!user?.companyId, 
+        queryKey: getListDiagnosticsQueryKey(diagParams),
+        // Poll every 3s while a diagnostic is being generated
+        refetchInterval: (query) => {
+          const data = query.state.data;
+          if (data && data.length > 0 && data[0]?.status === "generating") return 3000;
+          return false;
+        },
+      } 
+    }
   );
 
   const createDiagnosticMutation = useCreateDiagnostic();
 
+  // Poll for diagnostic completion using refetchInterval instead of simulated progress
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isGenerating && generationStep < aiSteps.length - 1) {
-      interval = setTimeout(() => {
-        setGenerationStep(prev => prev + 1);
-      }, 2000);
-    } else if (isGenerating && generationStep === aiSteps.length - 1) {
-      setIsGenerating(false);
-      queryClient.invalidateQueries({ queryKey: getListDiagnosticsQueryKey({ companyId: user?.companyId! }) });
+    if (isGenerating && diagnostics && diagnostics.length > 0) {
+      const latest = diagnostics[0];
+      if (latest?.status === "completed" || latest?.status === "failed") {
+        setIsGenerating(false);
+        setGenerationStep(0);
+      } else if (latest?.status === "generating") {
+        // Update progress step based on time elapsed
+        const elapsed = Date.now() - new Date(latest.createdAt).getTime();
+        const step = Math.min(Math.floor(elapsed / 8000), aiSteps.length - 1);
+        setGenerationStep(step);
+      }
     }
-    return () => clearTimeout(interval);
-  }, [isGenerating, generationStep, aiSteps.length, queryClient, user?.companyId]);
+  }, [isGenerating, diagnostics, aiSteps.length]);
 
   const handleGenerate = () => {
     if (!user?.companyId) return;

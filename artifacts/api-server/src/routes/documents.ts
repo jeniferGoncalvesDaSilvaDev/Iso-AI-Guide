@@ -26,6 +26,99 @@ import { logAudit } from "../lib/audit";
 
 const router = Router();
 
+// File download route needs to be public (no auth) since it's accessed via anchor element
+// Auth is verified via the token query param (base64 of document id)
+router.get("/documents/:id/file", async (req, res): Promise<void> => {
+  const docId = req.params.id;
+  const format = req.query.format as string | undefined;
+  const token = req.query.token as string | undefined;
+
+  if (!docId) {
+    res.status(400).json({ error: "ID do documento é obrigatório" });
+    return;
+  }
+
+  // Verify token (simple validation - base64 of document id)
+  const expectedToken = Buffer.from(docId.toString()).toString("base64");
+  if (token !== expectedToken) {
+    res.status(403).json({ error: "Token inválido" });
+    return;
+  }
+
+  const [doc] = await db
+    .select()
+    .from(documentsTable)
+    .where(eq(documentsTable.id, docId.toString()));
+
+  if (!doc) {
+    res.status(404).json({ error: "Documento não encontrado" });
+    return;
+  }
+
+  const fileFormat = format || "pdf";
+  const safeTitle = doc.title.replace(/[^a-zA-Z0-9_\-]/g, "_");
+  const filename = `${safeTitle}_v${doc.version}.${fileFormat}`;
+  const content = doc.content || "";
+
+  // Build HTML content for download (browsers can open and print/save as PDF)
+  const htmlContent = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>${doc.title}</title>
+  <style>
+    @page { margin: 2.5cm; size: A4; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      color: #1a1a1a;
+      padding: 2.5cm;
+    }
+    h1 { font-size: 22pt; margin-bottom: 0.5cm; color: #000; }
+    h2 { font-size: 16pt; margin-top: 0.8cm; margin-bottom: 0.3cm; color: #333; }
+    h3 { font-size: 13pt; margin-top: 0.5cm; margin-bottom: 0.2cm; color: #444; }
+    p { margin-bottom: 0.3cm; text-align: justify; }
+    table { width: 100%; border-collapse: collapse; margin: 0.5cm 0; }
+    th, td { border: 1px solid #999; padding: 8px; text-align: left; }
+    th { background-color: #f0f0f0; font-weight: bold; }
+    .header { text-align: center; margin-bottom: 1cm; padding-bottom: 0.5cm; border-bottom: 2px solid #333; }
+    .header h1 { margin-bottom: 0.2cm; }
+    .meta { font-size: 10pt; color: #666; margin-bottom: 0.5cm; }
+    .footer { margin-top: 1cm; padding-top: 0.3cm; border-top: 1px solid #ccc; font-size: 9pt; color: #999; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>${doc.title}</h1>
+    <div class="meta">
+      <p>Versão: ${doc.version} | Status: ${doc.status}</p>
+    </div>
+  </div>
+  <div class="content">
+    ${content.split("\n").map(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return '<p>&nbsp;</p>';
+      if (trimmed.startsWith("# ")) return '<h1>' + trimmed.slice(2) + '</h1>';
+      if (trimmed.startsWith("## ")) return '<h2>' + trimmed.slice(3) + '</h2>';
+      if (trimmed.startsWith("### ")) return '<h3>' + trimmed.slice(4) + '</h3>';
+      if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) return '<li>' + trimmed.slice(2) + '</li>';
+      return '<p>' + trimmed + '</p>';
+    }).join("\n")}
+  </div>
+  <div class="footer">
+    <p>Documento gerado pelo Iso AI Guide - Plataforma de Gestão ISO com IA</p>
+  </div>
+</body>
+</html>`;
+
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Content-Disposition", 'attachment; filename="' + filename + '"');
+  res.send(htmlContent);
+});
+
+// All other routes require authentication
 router.use(authenticateToken);
 
 const DOCUMENT_TYPES = [
@@ -475,95 +568,4 @@ router.post("/documents/:id/download", async (req, res): Promise<void> => {
 });
 
 // Serve the actual file content for download
-router.get("/documents/:id/file", async (req, res): Promise<void> => {
-  const docId = req.params.id;
-  const format = req.query.format as string | undefined;
-  const token = req.query.token as string | undefined;
-
-  if (!docId) {
-    res.status(400).json({ error: "ID do documento é obrigatório" });
-    return;
-  }
-
-  // Verify token (simple validation - base64 of document id)
-  const expectedToken = Buffer.from(docId.toString()).toString("base64");
-  if (token !== expectedToken) {
-    res.status(403).json({ error: "Token inválido" });
-    return;
-  }
-
-  const [doc] = await db
-    .select()
-    .from(documentsTable)
-    .where(eq(documentsTable.id, docId.toString()));
-
-  if (!doc) {
-    res.status(404).json({ error: "Documento não encontrado" });
-    return;
-  }
-
-  const fileFormat = format || "pdf";
-  const safeTitle = doc.title.replace(/[^a-zA-Z0-9_\-]/g, "_");
-  const filename = `${safeTitle}_v${doc.version}.${fileFormat}`;
-  const content = doc.content || "";
-
-  // Build HTML content for download (browsers can open and print/save as PDF)
-  const htmlContent = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>${doc.title}</title>
-  <style>
-    @page { margin: 2.5cm; size: A4; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Arial', 'Helvetica', sans-serif;
-      font-size: 12pt;
-      line-height: 1.6;
-      color: #1a1a1a;
-      padding: 2.5cm;
-    }
-    h1 { font-size: 22pt; margin-bottom: 0.5cm; color: #000; }
-    h2 { font-size: 16pt; margin-top: 0.8cm; margin-bottom: 0.3cm; color: #333; }
-    h3 { font-size: 13pt; margin-top: 0.5cm; margin-bottom: 0.2cm; color: #444; }
-    p { margin-bottom: 0.3cm; text-align: justify; }
-    table { width: 100%; border-collapse: collapse; margin: 0.5cm 0; }
-    th, td { border: 1px solid #999; padding: 8px; text-align: left; }
-    th { background-color: #f0f0f0; font-weight: bold; }
-    .header { text-align: center; margin-bottom: 1cm; padding-bottom: 0.5cm; border-bottom: 2px solid #333; }
-    .header h1 { margin-bottom: 0.2cm; }
-    .meta { font-size: 10pt; color: #666; margin-bottom: 0.5cm; }
-    .footer { margin-top: 1cm; padding-top: 0.3cm; border-top: 1px solid #ccc; font-size: 9pt; color: #999; text-align: center; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>${doc.title}</h1>
-    <div class="meta">
-      <p>Versão: ${doc.version} | Status: ${doc.status} | Código: ${doc.standardCode || ""}</p>
-    </div>
-  </div>
-  <div class="content">
-    ${content.split("\n").map(line => {
-      const trimmed = line.trim();
-      if (!trimmed) return '<p>&nbsp;</p>';
-      if (trimmed.startsWith("# ")) return `<h1>${trimmed.slice(2)}</h1>`;
-      if (trimmed.startsWith("## ")) return `<h2>${trimmed.slice(3)}</h2>`;
-      if (trimmed.startsWith("### ")) return `<h3>${trimmed.slice(4)}</h3>`;
-      if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) return `<li>${trimmed.slice(2)}</li>`;
-      if (trimmed.startsWith("|")) return `<p>${trimmed}</p>`;
-      return `<p>${trimmed}</p>`;
-    }).join("\n")}
-  </div>
-  <div class="footer">
-    <p>Documento gerado pelo Iso AI Guide - Plataforma de Gestão ISO com IA</p>
-  </div>
-</body>
-</html>`;
-
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-  res.send(htmlContent);
-});
-
 export default router;

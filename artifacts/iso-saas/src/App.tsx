@@ -24,6 +24,8 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      staleTime: 5000, // 5s before considering data stale
+      gcTime: 1000 * 60 * 5, // 5min garbage collection
     },
   },
 });
