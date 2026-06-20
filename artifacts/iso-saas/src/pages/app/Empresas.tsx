@@ -86,7 +86,7 @@ export default function Empresas() {
       { id: user.companyId, data },
       {
         onSuccess: () => {
-          toast.success("Dados salvos! Iniciando novo diagnóstico...");
+          toast.success("Dados salvos! Iniciando novo diagnóstico e regenerando documentos...");
           queryClient.invalidateQueries({ queryKey: getGetCompanyQueryKey(user.companyId!) });
           
           // Trigger automatic diagnosis regeneration with updated company data
@@ -95,11 +95,12 @@ export default function Empresas() {
             {
               onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: getListDiagnosticsQueryKey({ companyId: user.companyId! }) });
-                setLocation("/app/diagnostico");
+                toast.success("Diagnóstico atualizado! Agora gere os documentos com os novos dados.");
+                setLocation("/app/documentos");
               },
               onError: () => {
                 toast.error("Diagnóstico anterior marcado como desatualizado. Gere um novo na página de diagnóstico.");
-                setLocation("/app/diagnostico");
+                setLocation("/app/documentos");
               }
             }
           );

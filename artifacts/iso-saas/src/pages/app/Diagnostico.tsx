@@ -236,9 +236,9 @@ export default function Diagnostico() {
                 <p className="text-sm text-green-700">Seu plano de adequação está pronto. Agora você pode gerar os documentos.</p>
               </div>
             </div>
-            <Button variant="outline" size="sm" onClick={handleGenerate} className="shrink-0 hidden sm:flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleGenerate} className="shrink-0 flex gap-2">
               <RefreshCcw className="h-4 w-4" />
-              Refazer
+              Gerar Novo Diagnóstico
             </Button>
           </div>
 
@@ -278,8 +278,8 @@ export default function Diagnostico() {
                     ✅ Diagnóstico salvo automaticamente na sua conta
                   </p>
                   <Link href="/app/documentos">
-                    <Button size="lg" className="gap-2 w-full sm:w-auto">
-                      Criar meus documentos
+                    <Button size="lg" className="gap-2 w-full sm:w-auto bg-green-600 hover:bg-green-700">
+                      Gerar novos documentos
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>

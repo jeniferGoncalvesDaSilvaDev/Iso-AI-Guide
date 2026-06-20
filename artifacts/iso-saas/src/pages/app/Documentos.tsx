@@ -236,9 +236,9 @@ export default function Documentos() {
           </p>
         </div>
         {documents && documents.length > 0 && !isGenerating && (
-          <Button onClick={handleGenerate} className="gap-2 shrink-0" variant="outline">
+          <Button onClick={handleGenerate} className="gap-2 shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground">
             <Wand2 className="h-4 w-4" />
-            Gerar mais documentos
+            Gerar novos documentos
           </Button>
         )}
       </div>
