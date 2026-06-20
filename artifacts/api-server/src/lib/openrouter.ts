@@ -6,13 +6,16 @@ const BASE_URL = "https://openrouter.ai/api/v1";
 
 // Modelos gratuitos do OpenRouter (atualize se esgotar o período grátis)
 // Veja modelos gratuitos em: https://openrouter.ai/models?free=1
+// Modelos gratuitos testados do OpenRouter
+// Free models: https://openrouter.ai/models?free=1
 const MODELS = [
   "google/gemini-2.0-flash-exp:free",
-  "google/gemma-4-31b-it:free",
-  "openai/gpt-oss-120b:free",
-  "mistralai/mistral-small-24b-instruct-2501:free",
-  "qwen/qwen-2.5-coder-32b-instruct:free",
   "deepseek/deepseek-chat:free",
+  "qwen/qwen-2.5-coder-32b-instruct:free",
+  "mistralai/mistral-small-24b-instruct-2501:free",
+  "cognitivecomputations/dolphin-mixtral-8x7b:free",
+  "microsoft/phi-3.5-mini-128k-instruct:free",
+  "nousresearch/hermes-3-llama-3.1-405b:free",
 ];
 
 export interface ChatCompletionMessage {
@@ -55,7 +58,8 @@ async function callModel(
     });
 
     if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+      const errBody = await response.text().catch(() => 'no body');
+      throw new Error(`OpenRouter API error: ${response.status} ${response.statusText} - ${errBody.slice(0, 200)}`);
     }
 
     const data = (await response.json()) as {
