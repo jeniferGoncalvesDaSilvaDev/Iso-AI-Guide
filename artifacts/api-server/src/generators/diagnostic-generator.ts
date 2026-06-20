@@ -34,13 +34,17 @@ export async function generateDiagnostic(params: GenerateDiagnosticParams): Prom
     selectedStandards = stds.map((s) => s.code);
   }
 
-  // Create diagnostic record
+  // Get the latest diagnostic record for this company
   const [diagnostic] = await db
-    .insert(diagnosticsTable)
-    .values({ companyId, status: "generating", additionalInfo: additionalInfo ?? null })
-    .returning();
+    .select()
+    .from(diagnosticsTable)
+    .where(eq(diagnosticsTable.companyId, companyId))
+    .orderBy(diagnosticsTable.createdAt)
+    .limit(1);
 
-  const diagnosticId = diagnostic!.id;
+  if (!diagnostic) throw new Error("Nenhum diagnóstico encontrado");
+
+  const diagnosticId = diagnostic.id;
 
   // Generate each section independently
   setImmediate(async () => {
