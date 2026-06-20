@@ -16,7 +16,7 @@ if (Number.isNaN(port) || port <= 0) {
 }
 
 // Seed ISO standards on startup (no-op if already seeded)
-import { seedStandards } from "../../lib/db/src/seed";
+import { seedStandards } from "./seed";
 
 seedStandards()
   .then(() => {
