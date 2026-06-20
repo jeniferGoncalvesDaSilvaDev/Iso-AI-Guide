@@ -9,7 +9,7 @@ services:
       cd lib/db && pnpm run push && cd ../..
       BASE_PATH=/ PORT=5173 pnpm --filter @workspace/iso-saas run build 2>&1
       pnpm --filter @workspace/api-server run build 2>&1
-    startCommand: node --enable-source-maps --import dotenv/config ./artifacts/api-server/dist/index.mjs
+    startCommand: node --enable-source-maps --import ./artifacts/api-server/dist/preload.mjs ./artifacts/api-server/dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
       - key: NODE_ENV
