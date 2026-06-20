@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save, Download, History, FileText, CheckCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { formatMarkdown } from "@/lib/format";
 import { toast } from "sonner";
 import type { DocumentUpdateStatus } from "@workspace/api-client-react";
 
@@ -188,7 +189,7 @@ export default function DocumentoDetail() {
             ) : (
               <CardContent className="p-8 prose prose-slate max-w-none dark:prose-invert">
                 {doc.content ? (
-                  <div dangerouslySetInnerHTML={{ __html: doc.content.replace(/\n/g, '<br/>') }} />
+                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: formatMarkdown(doc.content) }} />
                 ) : (
                   <p className="text-muted-foreground italic text-center py-12">Conteúdo vazio.</p>
                 )}

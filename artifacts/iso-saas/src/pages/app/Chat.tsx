@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User as UserIcon, Sparkles, Lightbulb, FileText, ClipboardCheck, Shield } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ChatMessage } from "@workspace/api-client-react";
+import { formatMarkdown } from "@/lib/format";
 
 const SUGGESTIONS = [
   { icon: FileText, text: "Quais documentos preciso para ISO 9001?" },
@@ -16,16 +17,7 @@ const SUGGESTIONS = [
   { icon: Lightbulb, text: "Como definir a política da qualidade?" },
 ];
 
-function formatMessage(text: string): string {
-  // Convert markdown-style formatting to HTML
-  return text
-    .replace(/### (.+)/g, "<h3 class='text-base font-semibold mt-3 mb-1'>$1</h3>")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/^- (.+)$/gm, "<li class='ml-4 list-disc text-sm'>$1</li>")
-    .replace(/\n\n/g, "<br/><br/>")
-    .replace(/\n/g, "<br/>");
-}
+
 
 export default function Chat() {
   const { user } = useAuth();
@@ -80,7 +72,7 @@ export default function Chat() {
     return <div className="p-8 text-center text-muted-foreground">Configure sua empresa para usar o assistente.</div>;
   }
 
-  const messages = [...(history || [])].reverse();
+  const messages = history || [];
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col space-y-4">
@@ -152,7 +144,7 @@ export default function Chat() {
                   ) : (
                     <div className="space-y-1">
                       <div className="font-medium text-primary text-xs mb-1">Consultor ISO</div>
-                      <div className="leading-relaxed" dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }} />
+                      <div className="leading-relaxed" dangerouslySetInnerHTML={{ __html: formatMarkdown(msg.content) }} />
                     </div>
                   )}
                 </div>
